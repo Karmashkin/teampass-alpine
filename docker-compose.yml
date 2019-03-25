@@ -1,0 +1,53 @@
+version: '2.1'
+
+services:
+  teampass-php-fpm:
+    build: ./php-fpm7
+    image: 'teampass_php-fpm'
+    depends_on:
+      - teampass-mysql
+    volumes:
+    - ./teampass-data:/www
+    environment:
+    - VIRTUAL_HOST=teampass.sample.com
+    - TZ=Europe/Kiev
+    - TIMEZONE=Europe/Kiev
+    networks:
+      - back
+
+  teampass-mysql:
+    build: ./mysql
+    image: 'teampass_mysql'
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=SAMPLE_ROOT_PASSWORD
+      - MYSQL_DATABASE=teampass
+      - MYSQL_USER=teampass
+      - MYSQL_PASSWORD=SAMPLE_DB_PASSWORD
+    networks:
+      - back
+
+  teampass-nginx:
+    build: ./nginx
+    image: 'teampass-nginx'
+    restart: always
+    depends_on:
+      - teampass-mysql
+      - teampass-php-fpm
+    ports:
+      - "80:80/tcp"
+    environment:
+    - TZ=Europe/Kiev
+    - TIMEZONE=Europe/Kiev
+    volumes:
+      - ./teampass-data:/www
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - back
+
+networks:
+  back:
+    driver: bridge
+
+
